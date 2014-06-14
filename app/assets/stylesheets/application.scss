@@ -5,6 +5,7 @@
  *= require highlight
  *= require social-share-button
  *= require jquery.atwho
+ *= require jquery.fluidbox
  *= require nprogress
  *= require_tree ./sprites/
  *= require_self
@@ -15,7 +16,7 @@ html {
   background: #e5e5e5;
 }
 body { 
-  background:none; font-family: Arial,Helvetica,sans-serif;
+  background:none; font-family: "Heiti SC Light","Helvetica Neue",Helvetica,Arial,sans-serif;
   &.zoom-overlay-open {
     background:#FFF;
   }
@@ -23,6 +24,11 @@ body {
 
 code { background:none; }
 
+[data-action="zoom"] {
+  cursor: pointer;
+  cursor: -webkit-zoom-in;
+  cursor: -moz-zoom-in;
+}
 .navbar-fixed-top {
   position:static;right:0;left:0;margin-bottom:20px;
 /*  .badge-inverse { background:#666;}*/
@@ -75,8 +81,9 @@ code { background:none; }
 }
 
 .breadcrumb { display:none; }
-
-.container { width:960px; }
+.container { 
+  width:960px; 
+}
 .container-fluid { padding:0; }
 .container-fluid > .sidebar {
   position:absolute;
@@ -163,7 +170,6 @@ form {
 
 .footer {
   border-top:0;
-  min-width: 940px;
   margin-bottom:30px;
   margin-top:0px;
   padding:0;

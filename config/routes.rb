@@ -1,9 +1,10 @@
 Rails.application.routes.draw do
   require 'api'
   require "api_v2"
+  require 'sidekiq/web'
 
   resources :sites
-  resources :pages, :path => "wiki" do
+  resources :pages, path: "wiki" do
     collection do
       get :recent
       post :preview
@@ -19,18 +20,18 @@ Rails.application.routes.draw do
     end
   end
 
-  root :to => "home#index"
+  root to: "home#index"
 
-  devise_for :users, :path => "account", :controllers => {
-      :registrations => :account,
-      :sessions => :sessions,
-      :omniauth_callbacks => "users/omniauth_callbacks"
+  devise_for :users, path: "account", controllers: {
+      registrations: :account,
+      sessions: :sessions,
+      omniauth_callbacks: "users/omniauth_callbacks"
     }
 
   delete "account/auth/:provider/unbind" => "users#auth_unbind", as: 'unbind_account'
   post "account/update_private_token" => "users#update_private_token", as: 'update_private_token_account'
 
-  resources :notifications, :only => [:index, :destroy] do
+  resources :notifications, only: [:index, :destroy] do
     collection do
       post :clear
     end
@@ -45,8 +46,9 @@ Rails.application.routes.draw do
     member do
       post :reply
       post :favorite
+      delete :unfavorite
       post :follow
-      post :unfollow
+      delete :unfollow
       patch :suggest
       delete :unsuggest
     end
@@ -67,7 +69,7 @@ Rails.application.routes.draw do
   get "/search" => "search#index", as: 'search'
 
   namespace :cpanel do
-    root :to => "home#index"
+    root to: "home#index"
     resources :site_configs
     resources :replies
     resources :topics do
@@ -82,7 +84,7 @@ Rails.application.routes.draw do
     resources :users
     resources :photos
     resources :pages do
-      resources :versions, :controller => :page_versions do
+      resources :versions, controller: :page_versions do
         member do
           post :revert
         end
@@ -105,13 +107,17 @@ Rails.application.routes.draw do
   mount RubyChina::API => "/"
   mount RubyChina::APIV2 => "/"
 
+  authenticate :user, lambda { |u| u.admin? } do
+    mount Sidekiq::Web => '/sidekiq'
+  end
+
   mount JasmineRails::Engine => "/specs" if defined?(JasmineRails)
 
   # WARRING! 请保持 User 的 routes 在所有路由的最后，以便于可以让用户名在根目录下面使用，而又不影响到其他的 routes
   # 比如 http://ruby-china.org/huacnlee
   get "users/city/:id" => "users#city", as: 'location_users'
   get "users" => "users#index", as: 'users'
-  resources :users, :path => "" do
+  resources :users, path: "" do
     member do
       get :topics
       get :favorites

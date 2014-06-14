@@ -2,11 +2,11 @@
 require "redcarpet"
 module ApplicationHelper
   def sanitize_topic(body)
-    sanitize body, :tags => %w(p br img h1 h2 h3 h4 blockquote pre code b i strong em strike u a ul ol li span), :attributes => %w(href src class title alt target rel)
+    sanitize body, :tags => %w(p br img h1 h2 h3 h4 blockquote pre code b i strong em strike del u a ul ol li span), :attributes => %w(href src class title alt target rel)
   end
 
   def sanitize_reply(body)
-    sanitize body, :tags => %w(p br img h1 h2 h3 h4 blockquote pre code b i strong em strike u a ul ol li span), :attributes => %w(href src class title alt target rel data-floor)
+    sanitize body, :tags => %w(p br img h1 h2 h3 h4 blockquote pre code b i strong em strike del u a ul ol li span), :attributes => %w(href src class title alt target rel data-floor)
   end
 
   def notice_message
@@ -70,7 +70,7 @@ module ApplicationHelper
   end
 
   def owner?(item)
-    return false if item.blank? or current_user.blank?
+    return false if item.blank? || current_user.blank?
     item.user_id == current_user.id
   end
 
@@ -92,10 +92,6 @@ module ApplicationHelper
     data = data.gsub(/\n\s+/,"")
     data = data.gsub(/>\s+</,"><")
     sanitize data
-  end
-
-  def facebook_enable
-    Setting.facebook_enable
   end
 
   MOBILE_USER_AGENTS =  'palm|blackberry|nokia|phone|midp|mobi|symbian|chtml|ericsson|minimo|' +
@@ -122,5 +118,21 @@ module ApplicationHelper
       end
     end
     raw lang_list.join("")
+  end
+
+  def birthday_tag
+    if Time.now.month == 10 && Time.now.day == 28
+      age = Time.now.year - 2011 + 1
+      title = "Ruby China 创立 #{age} 周年纪念日"
+      html = []
+      html << "<div style='text-align:center;margin-bottom:20px; line-height:200%;'>"
+      %W(dancers beers cake birthday crown gift crown birthday cake beers dancers).each do |name|
+        html << image_tag(asset_path("assets/emojis/#{name}.png"), class: "emoji", title: title)
+      end
+      html << "<br />"
+      html << title
+      html << "</div>"
+      raw html.join(" ")
+    end
   end
 end

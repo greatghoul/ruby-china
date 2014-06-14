@@ -1,6 +1,7 @@
 # TopicsController 下所有页面的 JS 功能
 window.Topics =
   replies_per_page: 50
+  currentPageImageURLs : []
 
   # 往话题编辑器里面插入图片代码
   appendImageFromUpload : (srcs) ->
@@ -34,7 +35,7 @@ window.Topics =
       error : (result, status, errorThrown) ->
         Topics.restoreUploaderStatus()
         alert(errorThrown)
-      
+
 
     $("#topic_upload_images").fileUpload opts
     return false
@@ -42,7 +43,7 @@ window.Topics =
   restoreUploaderStatus : () ->
     $("#topic_add_image").parent().find("span.loading").remove()
     $("#topic_add_image").show()
-    
+
   # 回复
   reply : (floor,login) ->
     reply_body = $("#reply_body")
@@ -101,6 +102,22 @@ window.Topics =
       App.alert(msg,'#reply')
     $("#new_reply textarea").focus()
     $('#btn_reply').button('reset')
+    
+  # 图片点击增加全屏预览功能
+  initContentImageZoom : () ->    
+    exceptClasses = ["emoji"]
+    imgEls = $(".body img")
+    for el in imgEls
+      if exceptClasses.indexOf($(el).attr("class")) == -1
+        $(el).wrap("<a href='#{$(el).attr("src")}' class='zoom-image' data-action='zoom'></a>")
+      
+    # Bind click event
+    if App.mobile == true
+      $('a.zoom-image').attr("target","_blank")
+    else
+      $('a.zoom-image').fluidbox
+        overlayColor: "#FFF"
+    true
 
   preview: (body) ->
     $("#preview").text "Loading..."
@@ -150,12 +167,9 @@ window.Topics =
   favorite : (el) ->
     topic_id = $(el).data("id")
     if $(el).hasClass("small_bookmarked")
-      hash =
-        type : "unfavorite"
       $.ajax
-        url : "/topics/#{topic_id}/favorite"
-        data : hash
-        type : "POST"
+        url : "/topics/#{topic_id}/unfavorite"
+        type : "DELETE"
       $(el).attr("title","收藏")
       $(el).attr("class","icon small_bookmark")
     else
@@ -170,7 +184,7 @@ window.Topics =
     if followed
       $.ajax
         url : "/topics/#{topic_id}/unfollow"
-        type : "POST"
+        type : "DELETE"
       $(el).data("followed", false)
       $("i",el).attr("class", "icon small_follow")
     else
@@ -202,6 +216,8 @@ window.Topics =
 
   init : ->
     bodyEl = $("body")
+    
+    Topics.initContentImageZoom()
 
     Topics.initCloseWarning($("textarea.closewarning"))
 
@@ -247,7 +263,7 @@ window.Topics =
     App.atReplyable("textarea", logins)
 
     # Focus title field in new-topic page
-    $("body.topics-controller.new-action #topic_title").focus()
+    $("body[data-controller-name='topics'] #topic_title").focus()
 
 $(document).ready ->
   if $('body').data('controller-name') in ['topics', 'replies']
